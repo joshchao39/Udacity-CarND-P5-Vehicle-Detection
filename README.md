@@ -32,12 +32,10 @@ The approach employed by this project to detect vehicle can be broken down into 
 #### Training data
 8,792 vehicle images and 8,968 non-vehicle images were provided to train the binary classifier.
 
-Sample images with vehicles:
-
+##### Sample images with vehicles:
 ![alt text][image1]
 
-Sample images without vehicles:
-
+##### Sample images without vehicles:
 ![alt text][image2]
 
 #### Extract features
@@ -57,7 +55,7 @@ Two types of features were extracted from the training images:
   - As the HOG parameters, 16x16 was used to balance the accuracy and speed.
   - Color binning provides pixel color information
 
-Overall these two feature sets complement each other well, and they are concatenated to form the features for each image.
+Overall these two feature sets complement each other well. They are concatenated to form the features for each image.
 
 #### Training
 Since the class distribution are about even no redistribution was necessary. The data set was then split 80/20 randomly for training/testing.
@@ -79,16 +77,20 @@ Since the binary classifier was not trained to pinpoint the location and size of
 Just like any exhaustive search, this process is very slow, so we will need to limit the search to area where we expect the vehicle to be. We know cars further away appear smaller, and the no car should be in the sky (the upper half of the image).  
 
 Window coverage demo 1 (No overlap):
+
 ![alt text][image3]
 
 Note the above image was drawn with no overlap between windows for clarity. At serving I used 80% overlap to increase coverage:
+
 ![alt text][image4]
 
 Combining with the binary classifier gets us the windows that has car detected:
+
 ![alt text][image5]
 
 ### Generate heat map
 For each detected window, we add a score of 10 to the covered area. The more detection happens in an area, the higher the score the area gets. Using this technique we get a heat map for each frame:
+
 ![alt text][image6]
 
 This heat map represents the likelihood of car presence in the spatial domain. We can then run the heat maps from successive frames through an exponential moving averager to extract the likelihood covering both spatial and temporal domains.
@@ -113,6 +115,6 @@ Here's the [full video](https://youtu.be/QieNG8eA4Kk)
 ---
 
 ### Discussion
-This approach works well for this video, but it is far from being the most efficient and accurate. To improve efficiency we can design a hierarchical classifier to quickly reject non-car windows. To improve accuracy we can use data augmentation to further generalize the classifier. There are many improvements that can be made to enhance the approach discussed in this report.
+This approach works well for this video, but it is far from being the most efficient or most accurate. To improve efficiency we can design a hierarchical classifier to quickly reject non-car windows. To improve accuracy we can use data augmentation to further generalize the classifier. There are many improvements that can be made to enhance the approach discussed in this report.
 
-However, the biggest (smallest?) bottleneck is the slide window approach. Exhaustive search is rarely the best way to go in algorithms. Animals pay more attention to moving object, and perhaps we can expand on that idea to only run the classifier on area of the frame where movement is detected. (optical flow, motion history image, etc.)
+However, the biggest (smallest?) bottleneck is the slide window approach. Exhaustive search is rarely the best way to go in algorithms. Animals pay more attention to moving object, and perhaps we can expand on that idea to only run the classifier on area of the frame where movement is detected. (optical flow, motion history image, etc.) Once a car is detected we can then switch to tracking mode (particle filter, etc.). This should drastically improve the processing speed.
