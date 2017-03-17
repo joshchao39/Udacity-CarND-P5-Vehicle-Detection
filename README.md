@@ -29,16 +29,18 @@ The approach employed by this project to detect vehicle can be broken down into 
 
 ### Train binary classifier
 
-##### Training data
+#### Training data
 8,792 vehicle images and 8,968 non-vehicle images were provided to train the binary classifier.
 
 Sample images with vehicles:
+
 ![alt text][image1]
 
 Sample images without vehicles:
+
 ![alt text][image2]
 
-##### Extract features
+#### Extract features
 Two types of features were extracted from the training images:
 - **HOG (Histogram of Oriented Gradients)** features
   - More information about HOG can be found [here](https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients).
@@ -57,7 +59,7 @@ Two types of features were extracted from the training images:
 
 Overall these two feature sets complement each other well, and they are concatenated to form the features for each image.
 
-##### Training
+#### Training
 Since the class distribution are about even no redistribution was necessary. The data set was then split 80/20 randomly for training/testing.
 Several SVM kernels were used to compare the performance:
 
