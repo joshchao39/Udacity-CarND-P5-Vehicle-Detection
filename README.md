@@ -18,7 +18,7 @@
 * `test_code.py` scripts containing code to troubleshoot/experiment the system
 * `README.md` summary detailing the steps and the results
 
-###Project Breakdown
+### Project Breakdown
 
 The approach employed by this project to detect vehicle can be broken down into the following steps:
 1. Train an binary classifier to determine whether an image window contains a car or not
@@ -27,9 +27,9 @@ The approach employed by this project to detect vehicle can be broken down into 
 4. Draw bounding boxes around where vehicles are likely to locate
 
 
-###Train binary classifier
+### Train binary classifier
 
-#####Training data
+##### Training data
 8,792 vehicle images and 8,968 non-vehicle images were provided to train the binary classifier.
 
 Sample images with vehicles:
@@ -38,7 +38,7 @@ Sample images with vehicles:
 Sample images without vehicles:
 ![alt text][image2]
 
-#####Extract features
+##### Extract features
 Two types of features were extracted from the training images:
 - **HOG (Histogram of Oriented Gradients)** features
   - More information about HOG can be found [here](https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients).
@@ -57,7 +57,7 @@ Two types of features were extracted from the training images:
 
 Overall these two feature sets complement each other well, and they are concatenated to form the features for each image.
 
-#####Training
+##### Training
 Since the class distribution are about even no redistribution was necessary. The data set was then split 80/20 randomly for training/testing.
 Several SVM kernels were used to compare the performance:
 
@@ -71,7 +71,7 @@ Several SVM kernels were used to compare the performance:
 Since we can already achieve 99%+ test accuracy using `rbf` kernel and we will be able to use spatial and temporal filters later on to remove more false positive, this result is good enough.  
 
 
-###Slide detection window
+### Slide detection window
 Since the binary classifier was not trained to pinpoint the location and size of the vehicle, we need to slide and resize our detection window around each frame.
 
 Just like any exhaustive search, this process is very slow, so we will need to limit the search to area where we expect the vehicle to be. We know cars further away appear smaller, and the no car should be in the sky (the upper half of the image).  
@@ -85,13 +85,13 @@ Note the above image was drawn with no overlap between windows for clarity. At s
 Combining with the binary classifier gets us the windows that has car detected:
 ![alt text][image5]
 
-###Generate heat map
+### Generate heat map
 For each detected window, we add a score of 10 to the covered area. The more detection happens in an area, the higher the score the area gets. Using this technique we get a heat map for each frame:
 ![alt text][image6]
 
 This heat map represents the likelihood of car presence in the spatial domain. We can then run the heat maps from successive frames through an exponential moving averager to extract the likelihood covering both spatial and temporal domains.
 
-###Draw bounding boxes
+### Draw bounding boxes
 With the heat map, we have the information to throw bounding boxes around cars, after some filtering:
 1. Scores less than 5 are filtered out
 2. For each heat "island", draw the largest rectangle contained by the covered area
@@ -99,7 +99,7 @@ With the heat map, we have the information to throw bounding boxes around cars, 
 
 ![alt text][image7]
 
-###Video
+### Video
 To make the video more fun, I also applied the augmentation from the [Lane Finding project](https://github.com/joshchao39/Udacity-CarND-Lane-Finding-P4)! (Can't have enough augmentation)
 
 <p align="center">
@@ -110,7 +110,7 @@ Here's the [full video](https://youtu.be/QieNG8eA4Kk)
 
 ---
 
-###Discussion
+### Discussion
 This approach works well for this video, but it is far from being the most efficient and accurate. To improve efficiency we can design a hierarchical classifier to quickly reject non-car windows. To improve accuracy we can use data augmentation to further generalize the classifier. There are many improvements that can be made to enhance the approach discussed in this report.
 
 However, the biggest (smallest?) bottleneck is the slide window approach. Exhaustive search is rarely the best way to go in algorithms. Animals pay more attention to moving object, and perhaps we can expand on that idea to only run the classifier on area of the frame where movement is detected. (optical flow, motion history image, etc.)
