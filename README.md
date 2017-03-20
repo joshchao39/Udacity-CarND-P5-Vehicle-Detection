@@ -16,13 +16,13 @@
 * `FrameInfoStore.py` class containing data to be shared between frames in video  
 * `utils.py` module containing basic utility functions
 * `test_code.py` scripts containing code to troubleshoot/experiment the system
-* `README.md` summary detailing the steps and the results
+* `README.md` this report detailing the steps and the results
 
 ### Project Breakdown
 
 The approach employed by this project to detect vehicle can be broken down into the following steps:
 1. Train an binary classifier to determine whether an image window contains a car or not
-2. Grid search the video frames using windows with different sizes to generate a heat map corresponding to the likelihood of the presence of a vehicle
+2. Grid search the video frames using windows with different sizes and overlap to generate a heat map corresponding to the likelihood of the presence of a vehicle
 3. Use spatial and temporal filters to remove noise
 4. Draw bounding boxes around where vehicles are likely to locate
 
@@ -55,10 +55,12 @@ Two types of features were extracted from the training images:
   - As the HOG parameters, 16x16 was used to balance the accuracy and speed.
   - Color binning provides pixel color information
 
-Overall these two feature sets complement each other well. They are concatenated to form the features for each image.
+Overall these two feature sets complement each other well, as one provides edge information and one provides pixel information.
+
+The two feature sets are concatenated and then normalized using [StandardScaler](http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html) from scikit-learn to zero-mean and unit variance before being sent into the training stage. 
 
 #### Training
-Since the class distribution are about even no redistribution was necessary. The data set was then split 80/20 randomly for training/testing.
+Since the class distribution are about even no redistribution was necessary. The dataset was split 80/20 randomly for training/testing. 
 Several SVM kernels were used to compare the performance:
 
 | Kernel  | Test Accuracy |
@@ -68,11 +70,11 @@ Several SVM kernels were used to compare the performance:
 | **rbf** | **99.30%**    |
 | sigmoid | 93.13%        |
 
-Since we can already achieve 99%+ test accuracy using `rbf` kernel and we will be able to use spatial and temporal filters later on to remove more false positive, this result is good enough.  
+Since we can already achieve 99%+ test accuracy using **rbf** kernel and we will have filters later on to remove more false positive, this result is good enough.  
 
 
 ### Slide detection window
-Since the binary classifier was not trained to pinpoint the location and size of the vehicle, we need to slide and resize our detection window around each frame.
+Since the binary classifier was not trained to pinpoint the location and size of the vehicle, we need to slide and scale the detection window around each frame.
 
 Just like any exhaustive search, this process is very slow, so we will need to limit the search to area where we expect the vehicle to be. We know cars further away appear smaller, and the no car should be in the sky (the upper half of the image).  
 
@@ -80,7 +82,7 @@ Window coverage demo 1 (No overlap):
 
 ![alt text][image3]
 
-Note the above image was drawn with no overlap between windows for clarity. At serving I used 80% overlap to increase coverage:
+Note the above image was drawn with no overlap between windows for clarity. At serving I used 80% overlap to increase coverage at the cost of computation time:
 
 ![alt text][image4]
 
@@ -115,6 +117,6 @@ Here's the [full video](https://youtu.be/QieNG8eA4Kk)
 ---
 
 ### Discussion
-This approach works well for this video, but it is far from being the most efficient or most accurate. To improve efficiency we can design a hierarchical classifier to quickly reject non-car windows. To improve accuracy we can use data augmentation to further generalize the classifier. There are many improvements that can be made to enhance the approach discussed in this report.
+This approach works well for this video, but it is far from being the most efficient or the most accurate. To improve efficiency we can design a hierarchical classifier to quickly reject non-car windows. To improve accuracy we can use data augmentation to further generalize the classifier. There are many ways to improve the approach discussed in this report.
 
 However, the biggest (smallest?) bottleneck is the slide window approach. Exhaustive search is rarely the best way to go in algorithms. Animals pay more attention to moving object, and perhaps we can expand on that idea to only run the classifier on area of the frame where movement is detected. (optical flow, motion history image, etc.) Once a car is detected we can then switch to tracking mode (particle filter, etc.). This should drastically improve the processing speed.
